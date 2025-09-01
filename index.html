@@ -191,7 +191,7 @@
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
-					<a href="index.html"><img src="img/logo_fixmitra.webp" alt="FixMitra Logo" class="w-12 h-12 mr-3 rounded-xl"></a>
+					<a href="index.html"><img src="img/logo_fixmitra.png" alt="FixMitra Logo" class="w-12 h-12 mr-3 rounded-xl"></a>
 					<h1 class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
 						<a href="index.html"><span class="sm:hidden">FixMitra</span></a>
 						<a href="index.html"><span class="block sm:hidden text-sm italic font-normal text-gray-700 leading-none">by VoltNexis</span></a>
@@ -397,7 +397,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <div class="flex items-center mb-4">
-                        <img src="img/logo_fixmitra.webp" alt="FixMitra Logo" class="w-12 h-12 mr-3 rounded-xl">
+                        <img src="img/logo_fixmitra.png" alt="FixMitra Logo" class="w-12 h-12 mr-3 rounded-xl">
                         <h3 class="text-2xl font-bold">FixMitra by VoltNexis</h3>
                     </div>
                     <p class="text-purple-100 leading-relaxed">
@@ -635,11 +635,14 @@
                     console.log('Quick auto-login from localStorage');
                 } catch (e) {
                     localStorage.removeItem('fixmitra_user');
+                    isLoggedIn = false;
+                    updateAuthUI();
                 }
+            } else {
+                isLoggedIn = false;
+                updateAuthUI();
             }
             
-            // Then initialize full auth
-            initializeAuth();
             changeLanguage(currentLanguage);
             
             // Initialize Google Auth when page loads
@@ -675,12 +678,15 @@
 
         // Set user session
         async function setUserSession(session) {
+            console.log('Setting user session for:', session.user.id);
             try {
-                const { data: userProfile } = await supabaseClient
+                const { data: userProfile, error } = await supabaseClient
                     .from('users')
                     .select('*')
                     .eq('id', session.user.id)
                     .single();
+
+                console.log('User profile query result:', { userProfile, error });
 
                 if (userProfile) {
                     currentUser = {
@@ -693,15 +699,14 @@
                     };
                     
                     isLoggedIn = true;
-                    // Save to localStorage for auto-login
                     localStorage.setItem('fixmitra_user', JSON.stringify(currentUser));
-                    console.log('User session set:', currentUser.name || currentUser.email);
+                    console.log('User session set successfully:', currentUser.name || currentUser.email);
                 } else {
+                    console.error('User profile not found in database');
                     throw new Error('User profile not found');
                 }
             } catch (error) {
                 console.error('Failed to set user session:', error);
-                await supabaseClient.auth.signOut();
                 clearUserSession();
             }
         }
@@ -711,7 +716,7 @@
             isLoggedIn = false;
             currentUser = {};
             localStorage.removeItem('fixmitra_user');
-            console.log('User session cleared');
+            console.log('User session cleared - localStorage removed');
         }
 
         function changeLanguage(lang) {
@@ -737,6 +742,7 @@
         }
 
         function updateAuthUI() {
+            console.log('Updating UI - isLoggedIn:', isLoggedIn);
             if (isLoggedIn) {
                 document.getElementById('authButtons').classList.add('hidden');
                 document.getElementById('userMenu').classList.remove('hidden');
@@ -755,6 +761,7 @@
             } else {
                 document.getElementById('authButtons').classList.remove('hidden');
                 document.getElementById('userMenu').classList.add('hidden');
+                console.log('UI updated to show login button');
             }
         }
 
@@ -856,14 +863,37 @@
                 }
 
                 // Sign in with Supabase Auth
+                console.log('Attempting login with email:', loginEmail);
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: loginEmail,
                     password: password
                 });
 
+                console.log('Login response:', { data, error });
                 if (error) throw error;
 
-                // Session will be handled by onAuthStateChange
+                // Get user profile and set session manually
+                const { data: userProfile } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('id', data.user.id)
+                    .single();
+
+                if (userProfile) {
+                    currentUser = {
+                        id: data.user.id,
+                        email: data.user.email || userProfile.email,
+                        name: userProfile.full_name,
+                        phone: userProfile.phone,
+                        picture: userProfile.profile_picture,
+                        authMethod: userProfile.auth_method
+                    };
+                    
+                    isLoggedIn = true;
+                    localStorage.setItem('fixmitra_user', JSON.stringify(currentUser));
+                    updateAuthUI();
+                }
+                
                 closeModal('loginModal');
                 console.log('Successfully logged in!');
             } catch (error) {
@@ -1042,14 +1072,11 @@
         // Listen for auth state changes
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
             console.log('Auth state changed:', event);
-            
-            if (session && session.user) {
-                await setUserSession(session);
-            } else {
+            // Only handle explicit sign out events
+            if (event === 'SIGNED_OUT') {
                 clearUserSession();
+                updateAuthUI();
             }
-            
-            updateAuthUI();
         });
 
         function setButtonLoading(button, isLoading, text) {
@@ -1187,16 +1214,15 @@
             }
         }
 
-        async function logout() {
-            try {
-                const { error } = await supabaseClient.auth.signOut();
-                if (error) console.error('Supabase logout error:', error);
-                alert('Logged out successfully!');
-            } catch (error) {
-                console.error('Logout error:', error);
-                clearUserSession();
-                updateAuthUI();
-            }
+        function logout() {
+            console.log('Logout button clicked!');
+            
+            // Force Supabase logout without waiting
+            supabaseClient.auth.signOut().catch(err => console.log('Supabase signout error:', err));
+            
+            clearUserSession();
+            updateAuthUI();
+            console.log('Successfully logged out!');
         }
     </script>
 </body>
