@@ -620,13 +620,26 @@
 
     <script>
         let currentLanguage = 'en';
-        let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-        let currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+        let isLoggedIn = false;
+        let currentUser = {};
 
         // Initialize page
-        document.addEventListener('DOMContentLoaded', async function() {
-            await checkExistingSession();
-            updateAuthUI();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check localStorage immediately for instant UI update
+            const savedUser = localStorage.getItem('fixmitra_user');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    isLoggedIn = true;
+                    updateAuthUI();
+                    console.log('Quick auto-login from localStorage');
+                } catch (e) {
+                    localStorage.removeItem('fixmitra_user');
+                }
+            }
+            
+            // Then initialize full auth
+            initializeAuth();
             changeLanguage(currentLanguage);
             
             // Initialize Google Auth when page loads
@@ -639,42 +652,66 @@
             });
         });
 
-        // Check for existing Supabase session
-        async function checkExistingSession() {
+        // Initialize authentication
+        async function initializeAuth() {
             try {
                 const { data: { session }, error } = await supabaseClient.auth.getSession();
                 
-                if (error) {
-                    console.error('Session check error:', error);
-                    return;
-                }
-
                 if (session && session.user) {
-                    // Get user profile from users table
-                    const { data: userProfile, error: profileError } = await supabaseClient
-                        .from('users')
-                        .select('*')
-                        .eq('id', session.user.id)
-                        .single();
-
-                    if (!profileError && userProfile) {
-                        currentUser = {
-                            id: session.user.id,
-                            email: session.user.email,
-                            name: userProfile.full_name,
-                            phone: userProfile.phone,
-                            picture: userProfile.profile_picture,
-                            authMethod: userProfile.auth_method
-                        };
-                        
-                        isLoggedIn = true;
-                        localStorage.setItem('isLoggedIn', 'true');
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    }
+                    await setUserSession(session);
+                    updateAuthUI();
+                } else if (!isLoggedIn) {
+                    clearUserSession();
+                    updateAuthUI();
                 }
             } catch (error) {
-                console.error('Session check failed:', error);
+                console.error('Auth initialization error:', error);
+                if (!isLoggedIn) {
+                    clearUserSession();
+                    updateAuthUI();
+                }
             }
+        }
+
+        // Set user session
+        async function setUserSession(session) {
+            try {
+                const { data: userProfile } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (userProfile) {
+                    currentUser = {
+                        id: session.user.id,
+                        email: session.user.email || userProfile.email,
+                        name: userProfile.full_name,
+                        phone: userProfile.phone,
+                        picture: userProfile.profile_picture,
+                        authMethod: userProfile.auth_method
+                    };
+                    
+                    isLoggedIn = true;
+                    // Save to localStorage for auto-login
+                    localStorage.setItem('fixmitra_user', JSON.stringify(currentUser));
+                    console.log('User session set:', currentUser.name || currentUser.email);
+                } else {
+                    throw new Error('User profile not found');
+                }
+            } catch (error) {
+                console.error('Failed to set user session:', error);
+                await supabaseClient.auth.signOut();
+                clearUserSession();
+            }
+        }
+
+        // Clear user session
+        function clearUserSession() {
+            isLoggedIn = false;
+            currentUser = {};
+            localStorage.removeItem('fixmitra_user');
+            console.log('User session cleared');
         }
 
         function changeLanguage(lang) {
@@ -791,10 +828,9 @@
                 
                 // If input looks like phone number, find associated email
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailOrPhone)) {
-                    // It's a phone number, find the user's email
-                    const { data: phoneUser, error: profileError } = await supabaseClient
+                    const { data: phoneUser } = await supabaseClient
                         .from('users')
-                        .select('email, phone, auth_method')
+                        .select('email, auth_method')
                         .eq('phone', emailOrPhone)
                         .maybeSingle();
 
@@ -802,16 +838,13 @@
                         throw new Error('Phone number not found. Please check your phone number.');
                     }
                     
-                    // Check if user signed up with Google
                     if (phoneUser.auth_method === 'google') {
                         throw new Error('This phone number is associated with a Google account. Please sign in with Google.');
                     }
                     
-                    // Use the generated email for auth
                     loginEmail = phoneUser.email || `${emailOrPhone.replace(/[^0-9]/g, '')}@fixmitra.local`;
                 } else {
-                    // It's an email, check if user signed up with Google
-                    const { data: emailUser, error: emailError } = await supabaseClient
+                    const { data: emailUser } = await supabaseClient
                         .from('users')
                         .select('auth_method')
                         .eq('email', emailOrPhone)
@@ -830,30 +863,7 @@
 
                 if (error) throw error;
 
-                // Get user profile from users table
-                const { data: profile, error: profileError } = await supabaseClient
-                    .from('users')
-                    .select('*')
-                    .eq('id', data.user.id)
-                    .single();
-
-                if (profileError) {
-                    console.error('Profile fetch error:', profileError);
-                }
-
-                currentUser = {
-                    id: data.user.id,
-                    email: profile?.email,
-                    phone: profile?.phone,
-                    name: profile?.full_name || 'User',
-                    authMethod: profile?.auth_method || 'phone'
-                };
-
-                isLoggedIn = true;
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                updateAuthUI();
+                // Session will be handled by onAuthStateChange
                 closeModal('loginModal');
                 console.log('Successfully logged in!');
             } catch (error) {
@@ -954,20 +964,7 @@
                     throw new Error('Failed to create user profile: ' + insertError.message);
                 }
 
-                // Auto-login after successful registration
-                currentUser = {
-                    id: data.user.id,
-                    email: email,
-                    phone: phone,
-                    name: name,
-                    authMethod: email ? 'email' : 'phone'
-                };
-
-                isLoggedIn = true;
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                updateAuthUI();
+                // Session will be handled by onAuthStateChange
                 closeModal('signupModal');
                 alert('Account created and logged in successfully!');
             } catch (error) {
@@ -1044,18 +1041,15 @@
         
         // Listen for auth state changes
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
-            console.log('Auth state changed:', event, session);
+            console.log('Auth state changed:', event);
             
-            if (event === 'SIGNED_IN' && session) {
-                await checkExistingSession();
-                updateAuthUI();
-            } else if (event === 'SIGNED_OUT') {
-                isLoggedIn = false;
-                currentUser = {};
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('currentUser');
-                updateAuthUI();
+            if (session && session.user) {
+                await setUserSession(session);
+            } else {
+                clearUserSession();
             }
+            
+            updateAuthUI();
         });
 
         function setButtonLoading(button, isLoading, text) {
@@ -1144,21 +1138,7 @@
                     }
                 }
                 
-                currentUser = {
-                    id: data.user.id,
-                    name: userProfile?.full_name || payload.name,
-                    email: payload.email,
-                    picture: userProfile?.profile_picture || payload.picture,
-                    googleId: payload.sub,
-                    authMethod: 'google'
-                };
-                
-                isLoggedIn = true;
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                console.log('User signed in successfully:', currentUser);
-                updateAuthUI();
+                // Session will be handled by onAuthStateChange
                 closeAllModals();
                 alert('Successfully signed in with Google!');
             } catch (error) {
@@ -1198,20 +1178,7 @@
                     if (insertError) throw insertError;
                 }
 
-                currentUser = {
-                    id: existingUser?.id || generateUserId(),
-                    name: payload.name,
-                    email: payload.email,
-                    picture: payload.picture,
-                    googleId: payload.sub,
-                    authMethod: 'google'
-                };
-                
-                isLoggedIn = true;
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                
-                updateAuthUI();
+                // Session will be handled by onAuthStateChange
                 closeAllModals();
                 alert('Successfully signed in with Google!');
             } catch (error) {
@@ -1222,23 +1189,12 @@
 
         async function logout() {
             try {
-                // Sign out from Supabase
                 const { error } = await supabaseClient.auth.signOut();
                 if (error) console.error('Supabase logout error:', error);
-                
-                isLoggedIn = false;
-                currentUser = {};
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('currentUser');
-                updateAuthUI();
                 alert('Logged out successfully!');
             } catch (error) {
                 console.error('Logout error:', error);
-                // Still clear local state even if Supabase logout fails
-                isLoggedIn = false;
-                currentUser = {};
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('currentUser');
+                clearUserSession();
                 updateAuthUI();
             }
         }
