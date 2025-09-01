@@ -191,7 +191,7 @@
         <div class="container mx-auto px-4 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center">
-					<a href="index.html"><img src="img/logo_fixmitra.png" alt="FixMitra Logo" class="w-12 h-12 mr-3"></a>
+					<a href="index.html"><img src="img/logo_fixmitra.png" alt="FixMitra Logo" class="w-12 h-12 mr-3 rounded-xl"></a>
 					<h1 class="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
 						<a href="index.html"><span class="sm:hidden">FixMitra</span></a>
 						<a href="index.html"><span class="block sm:hidden text-sm italic font-normal text-gray-700 leading-none">by VoltNexis</span></a>
@@ -253,106 +253,96 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Home Cleaning -->
                 <div class="service-card bg-white cursor-pointer" onclick="selectService('Home Cleaning')">
-                    <div class="p-8 text-center">
-                        <div class="service-icon gradient-primary mx-auto mb-4">
-                            <i class="fas fa-broom"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-3">Home Cleaning</h3>
-                        <p class="text-gray-600 mb-6 leading-relaxed">
-                            Professional deep cleaning services for your home. We handle kitchens, bathrooms, living areas, and more.
-                        </p>
-                        <button class="btn-primary w-full">
-                            Book Now
-                        </button>
-                    </div>
-                </div>
+                    <img src="img/home-cleaning.webp" alt="Description of the service" class="w-full h-auto object-cover">
+					<div class="p-8 text-center">
+						<h3 class="text-2xl font-bold text-gray-800 mb-3">Home Cleaning</h3>
+						<p class="text-gray-600 mb-6 leading-relaxed">
+							Professional deep cleaning services for your home. We handle kitchens, bathrooms, living areas, and more.
+						</p>
+						<button class="btn-primary w-full">
+							Book Now
+						</button>
+					</div>
+				</div>
                 
                 <!-- AC Repair -->
                 <div class="service-card bg-white cursor-pointer" onclick="selectService('AC Repair')">
-                    <div class="p-8 text-center">
-                        <div class="service-icon gradient-success mx-auto mb-4">
-                            <i class="fas fa-snowflake"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-3">AC Repair</h3>
-                        <p class="text-gray-600 mb-6 leading-relaxed">
-                            Expert AC repair and maintenance services by certified technicians. Get your cooling system running smoothly.
-                        </p>
-                        <button class="btn-primary w-full">
-                            Book Now
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Plumbing -->
-                <div class="service-card bg-white cursor-pointer" onclick="selectService('Plumbing')">
-                    <div class="p-8 text-center">
-                        <div class="service-icon gradient-warm mx-auto mb-4">
-                            <i class="fas fa-wrench"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-3">Plumbing</h3>
-                        <p class="text-gray-600 mb-6 leading-relaxed">
-                            Fix leaks, unclog drains, and solve all plumbing issues with our experienced plumbers.
-                        </p>
-                        <button class="btn-primary w-full">
-                            Book Now
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Electrical Work -->
-                <div class="service-card bg-white cursor-pointer" onclick="selectService('Electrical Work')">
-                    <div class="p-8 text-center">
-                        <div class="service-icon gradient-secondary mx-auto mb-4">
-                            <i class="fas fa-bolt"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-3">Electrical</h3>
-                        <p class="text-gray-600 mb-6 leading-relaxed">
-                            Safe and reliable electrical repairs, installations, and maintenance for your home.
-                        </p>
-                        <button class="btn-primary w-full">
-                            Book Now
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Painting -->
-                <div class="service-card bg-white cursor-pointer" onclick="selectService('Painting')">
-                    <div class="p-8 text-center">
-                        <div class="service-icon gradient-cool mx-auto mb-4">
-                            <i class="fas fa-paint-roller"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-3">Painting</h3>
-                        <p class="text-gray-600 mb-6 leading-relaxed">
-                            Interior and exterior painting services by skilled professionals using quality materials.
-                        </p>
-                        <button class="btn-primary w-full">
-                            Book Now
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Appliance Repair -->
-                <div class="service-card bg-white cursor-pointer" onclick="selectService('Appliance Repair')">
-                    <div class="p-8 text-center">
-                        <div class="service-icon gradient-ocean mx-auto mb-4">
-                            <i class="fas fa-tools"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-3">Appliance Repair</h3>
-                        <p class="text-gray-600 mb-6 leading-relaxed">
-                            Repair services for all major home appliances - refrigerators, washing machines, and more.
-                        </p>
-                        <button class="btn-primary w-full">
-                            Book Now
-                        </button>
-                    </div>
-                </div>
+            <img src="img/ac-repair.webp" alt="A clean, modern air conditioning unit." class="w-full h-auto object-cover">
+            <div class="p-8 text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">AC Repair</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed">
+                    Expert AC repair and maintenance services by certified technicians. Get your cooling system running smoothly.
+                </p>
+                <button class="btn-primary w-full">
+                    Book Now
+                </button>
             </div>
+        </div>
+
+
+               
+                <!-- Plumbing -->
+        <div class="service-card bg-white cursor-pointer" onclick="selectService('Plumbing')">
+            <img src="img/plumbing.webp" alt="A set of plumbing tools on a workbench." class="w-full h-auto object-cover">
+            <div class="p-8 text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Plumbing</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed">
+                    Fix leaks, unclog drains, and solve all plumbing issues with our experienced plumbers.
+                </p>
+                <button class="btn-primary w-full">
+                    Book Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Electrical Work -->
+        <div class="service-card bg-white cursor-pointer" onclick="selectService('Electrical Work')">
+            <img src="img/electrical.webp" alt="A technician working on electrical wiring." class="w-full h-auto object-cover">
+            <div class="p-8 text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Electrical</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed">
+                    Safe and reliable electrical repairs, installations, and maintenance for your home.
+                </p>
+                <button class="btn-primary w-full">
+                    Book Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Painting -->
+        <div class="service-card bg-white cursor-pointer" onclick="selectService('Painting')">
+            <img src="img/painting.webp" alt="A freshly painted wall with a roller." class="w-full h-auto object-cover">
+            <div class="p-8 text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Painting</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed">
+                    Interior and exterior painting services by skilled professionals using quality materials.
+                </p>
+                <button class="btn-primary w-full">
+                    Book Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Appliance Repair -->
+        <div class="service-card bg-white cursor-pointer" onclick="selectService('Appliance Repair')">
+            <img src="img/appliance-repair.webp" alt="A person repairing a broken washing machine." class="w-full h-auto object-cover">
+            <div class="p-8 text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-3">Appliance Repair</h3>
+                <p class="text-gray-600 mb-6 leading-relaxed">
+                    Repair services for all major home appliances - refrigerators, washing machines, and more.
+                </p>
+                <button class="btn-primary w-full">
+                    Book Now
+                </button>
+            </div>
+        </div>
+        </div>
             <!-- Additional Navigation -->
             <div class="mt-16 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-8">
                 <a href="track_service.html" class="glass-effect text-purple-600 px-8 py-4 rounded-full font-semibold hover:bg-white transition duration-300 text-center text-lg shadow-lg">
                     <i class="fas fa-map-marker-alt mr-3"></i> Track Your Service
                 </a>
-                <a href="../krprovider/provider.html" class="btn-secondary px-8 py-4 text-center text-lg">
+                <a href="https://voltnexis.github.io/provider.fixmitra" class="btn-secondary px-8 py-4 text-center text-lg">
                     <i class="fas fa-user-plus mr-3"></i> Become a Provider
                 </a>
             </div>
@@ -407,9 +397,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <div class="flex items-center mb-4">
-                        <div class="bg-white p-2 rounded-full mr-3">
-                            <i class="fas fa-home text-purple-600 text-xl"></i>
-                        </div>
+                        <img src="img/logo_fixmitra.png" alt="FixMitra Logo" class="w-12 h-12 mr-3 rounded-xl">
                         <h3 class="text-2xl font-bold">FixMitra by VoltNexis</h3>
                     </div>
                     <p class="text-purple-100 leading-relaxed">
@@ -423,7 +411,7 @@
                         <li><a href="#" class="text-purple-100 hover:text-white transition duration-300 flex items-center"><i class="fas fa-home mr-2"></i> Home</a></li>
                         <li><a href="#services" class="text-purple-100 hover:text-white transition duration-300 flex items-center"><i class="fas fa-concierge-bell mr-2"></i> Services</a></li>
                         <li><a href="track_service.html" class="text-purple-100 hover:text-white transition duration-300 flex items-center"><i class="fas fa-map-marker-alt mr-2"></i> Track Service</a></li>
-                        <li><a href="../krprovider/provider.html" class="text-purple-100 hover:text-white transition duration-300 flex items-center"><i class="fas fa-user-plus mr-2"></i> Become a Provider</a></li>
+                        <li><a href="https://voltnexis.github.io/provider.fixmitra" class="text-purple-100 hover:text-white transition duration-300 flex items-center"><i class="fas fa-user-plus mr-2"></i> Become a Provider</a></li>
                     </ul>
                 </div>
                 
@@ -434,13 +422,13 @@
                             <div class="bg-white bg-opacity-20 p-2 rounded-full mr-3">
                                 <i class="fas fa-phone-alt"></i>
                             </div>
-                            +91 9876543210
+                            +91 97787 19567
                         </li>
                         <li class="flex items-center">
                             <div class="bg-white bg-opacity-20 p-2 rounded-full mr-3">
                                 <i class="fas fa-envelope"></i>
                             </div>
-                            support@fixmitra.com
+                            voltnexis@gmail.com
                         </li>
                         <li class="flex items-center">
                             <div class="bg-white bg-opacity-20 p-2 rounded-full mr-3">
@@ -454,16 +442,16 @@
                 <div>
                     <h3 class="text-xl font-bold mb-6">Follow Us</h3>
                     <div class="flex space-x-4">
-                        <a href="#" class="bg-white bg-opacity-20 p-3 rounded-full hover:bg-white hover:text-purple-600 transition duration-300">
+                        <a href="https://www.facebook.com/profile.php?id=61579094093361" class="bg-white bg-opacity-20 p-3 rounded-full hover:bg-white hover:text-purple-600 transition duration-300">
                             <i class="fab fa-facebook-f text-xl"></i>
                         </a>
-                        <a href="#" class="bg-white bg-opacity-20 p-3 rounded-full hover:bg-white hover:text-purple-600 transition duration-300">
+                        <a href="https://x.com/voltnexis" class="bg-white bg-opacity-20 p-3 rounded-full hover:bg-white hover:text-purple-600 transition duration-300">
                             <i class="fab fa-twitter text-xl"></i>
                         </a>
-                        <a href="#" class="bg-white bg-opacity-20 p-3 rounded-full hover:bg-white hover:text-purple-600 transition duration-300">
+                        <a href="https://instagram.com/voltnexis" class="bg-white bg-opacity-20 p-3 rounded-full hover:bg-white hover:text-purple-600 transition duration-300">
                             <i class="fab fa-instagram text-xl"></i>
                         </a>
-                        <a href="#" class="bg-white bg-opacity-20 p-3 rounded-full hover:bg-white hover:text-purple-600 transition duration-300">
+                        <a href="https://youtube.com/@voltnexis" class="bg-white bg-opacity-20 p-3 rounded-full hover:bg-white hover:text-purple-600 transition duration-300">
                             <i class="fab fa-youtube text-xl"></i>
                         </a>
                     </div>
