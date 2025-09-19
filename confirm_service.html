@@ -4,9 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confirm Service - FixMitra by VoltNexis</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="img/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/site.webmanifest">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Book premium home services with FixMitra. Professional cleaning, AC repair, plumbing, electrical work, painting, and appliance repair services at your doorstep.">
+    <meta name="keywords" content="home services, cleaning service, AC repair, plumbing, electrical work, painting, appliance repair, FixMitra, VoltNexis">
+    <meta name="author" content="FixMitra by VoltNexis">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Book Premium Home Services - FixMitra">
+    <meta property="og:description" content="Professional home services at your doorstep. Book cleaning, repair, and maintenance services with verified providers.">
+    <meta property="og:image" content="img/og-image-customer.png">
+    <meta property="og:url" content="https://fixmitra.com/confirm-service">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="FixMitra">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Book Premium Home Services - FixMitra">
+    <meta name="twitter:description" content="Professional home services at your doorstep with verified providers.">
+    <meta name="twitter:image" content="img/twitter-card-customer.png">
+    
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
         /* Beautiful Gradients */
         .gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
@@ -235,6 +273,30 @@
         </div>
     </div>
 
+    <!-- No Providers Modal -->
+    <div id="noProvidersModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 hidden">
+        <div class="modal-content bg-white w-full max-w-md mx-4">
+            <div class="p-8 text-center">
+                <div class="w-20 h-20 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-6">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 mb-4">Sorry!</h3>
+                <p class="text-gray-600 mb-6">We are sorry about that, no providers available in your area. We try our maximum to add providers, stay tuned!</p>
+                
+                <div class="flex flex-col space-y-4">
+                    <button onclick="closeNoProvidersModal()" class="btn-primary w-full py-3">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Try Different Area
+                    </button>
+                    <button onclick="goHome()" class="glass-effect text-gray-800 w-full py-3 rounded-full font-semibold hover:bg-white transition duration-300">
+                        <i class="fas fa-home mr-2"></i>
+                        Back to Home
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Success Modal -->
     <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 hidden">
         <div class="modal-content bg-white w-full max-w-md mx-4">
@@ -273,6 +335,83 @@
         let selectedService = localStorage.getItem('selectedService') || 'Home Cleaning';
         let currentUser = JSON.parse(localStorage.getItem('fixmitra_user') || '{}');
         let generatedServiceId = '';
+        
+        // Initialize EmailJS
+        emailjs.init('UCB-e8RJIwpvJYao-');
+        
+        // Notification functions
+        async function sendWhatsAppNotification(phone, requestData) {
+            const message = `🔔 *FixMitra - New Service Request*\n\n` +
+                          `*Action Required:* A new service request has been created in your locality.\n\n` +
+                          `*Request Details:*\n` +
+                          `• Service: ${requestData.category}\n` +
+                          `• Location: Pincode ${requestData.pincode}\n` +
+                          `• Request Time: ${new Date(requestData.created_at).toLocaleString()}\n` +
+                          `• Request ID: #${requestData.request_id}\n` +
+                          `• Provider Selection: ${requestData.provider === 'default' ? 'Default' : 'Custom'}\n\n` +
+                          `A customer in your service area needs assistance. Please review and respond promptly.\n\n` +
+                          `*Quick Actions:*\n` +
+                          `✓ Review request details\n` +
+                          `✓ Accept or decline service\n` +
+                          `✓ Contact customer if accepted\n\n` +
+                          `Open Provider Dashboard: ${window.location.origin}/provider.fixmitra/`;
+            
+            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            // In production, use WhatsApp Business API
+            console.log('WhatsApp notification:', whatsappUrl);
+        }
+        
+        async function sendEmailNotification(providerEmail, requestData) {
+            try {
+                const templateParams = {
+                    to_email: providerEmail,
+                    provider_email: providerEmail,
+                    service_category: requestData.category,
+                    location: `Pincode: ${requestData.pincode}`,
+                    request_time: new Date().toLocaleString(),
+                    request_id: requestData.request_id,
+                    provider_selection: requestData.provider === 'default' ? 'Default' : 'Custom',
+                    dashboard_url: window.location.origin + '/provider.fixmitra/'
+                };
+                
+                await emailjs.send('service_vgfcxqo', 'template_8thkh7e', templateParams);
+                console.log('Email notification sent successfully to:', providerEmail);
+            } catch (error) {
+                console.error('Email notification failed:', error);
+            }
+        }
+        
+        async function notifyProvidersOfNewRequest(requestData) {
+            try {
+                const { data: providers, error } = await supabaseClient
+                    .from('providers')
+                    .select('*')
+                    .eq('status', 'active');
+                
+                if (error) throw error;
+                
+                const matchingProviders = providers.filter(provider => {
+                    const providerPincodes = provider.pincodes.split(',').map(p => p.trim());
+                    const providerCategories = provider.categories.split(',').map(c => c.trim());
+                    return providerPincodes.includes(requestData.pincode) && 
+                           providerCategories.includes(requestData.category);
+                });
+                
+                console.log(`Notifying ${matchingProviders.length} providers...`);
+                
+                matchingProviders.forEach(async (provider) => {
+                    if (provider.whatsapp_notifications && provider.phone) {
+                        await sendWhatsAppNotification(provider.phone, requestData);
+                    }
+                    if (provider.email_notifications && provider.email) {
+                        await sendEmailNotification(provider.email, requestData);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error notifying providers:', error);
+            }
+        }
 
         // Service configurations
         const serviceConfig = {
@@ -333,10 +472,10 @@
                 document.getElementById('serviceIcon').innerHTML = `<i class="${config.icon} text-2xl"></i>`;
             }
 
-            // Don't pre-fill user information - let user enter their own details
-            // This ensures we get the actual name they want to use, not Google display name
-
             loadProviders();
+            
+            // Add pincode change listener
+            document.getElementById('userPincode').addEventListener('input', filterProvidersByPincode);
         }
 
         function setupEventListeners() {
@@ -360,30 +499,41 @@
             try {
                 const { data: providers, error } = await supabaseClient
                     .from('providers')
-                    .select('*');
+                    .select('email, company_name, name, pincodes, categories, verified, isfast')
+                    .eq('status', 'active');
 
                 if (error) throw error;
 
                 container.innerHTML = '';
                 if (!providers?.length) {
                     container.innerHTML = '<div class="text-center py-4 text-gray-500">No providers available</div>';
+                    document.getElementById('customProvider').disabled = true;
                     return;
                 }
+
+                document.getElementById('customProvider').disabled = false;
 
                 providers.forEach(provider => {
                     const providerDiv = document.createElement('div');
                     providerDiv.className = 'flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50';
+                    
+                    const verifiedBadge = provider.verified ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 ml-2"><i class="fas fa-check-circle mr-1"></i>Verified</span>' : '';
+                    const fastBadge = provider.isfast ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 ml-2"><i class="fas fa-bolt mr-1"></i>Fast</span>' : '';
+                    
                     providerDiv.innerHTML = `
                         <div class="flex items-center">
-                            <input type="checkbox" id="provider_${provider.id}" name="selectedProviders" value="${provider.id}" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <input type="checkbox" id="provider_${provider.email}" name="selectedProviders" value="${provider.email}" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
                             <div class="ml-3">
-                                <label for="provider_${provider.id}" class="text-sm font-medium text-gray-900 cursor-pointer">${provider.name}</label>
-                                <div class="text-xs text-gray-500">
+                                <div class="flex items-center">
+                                    <label for="provider_${provider.email}" class="text-sm font-medium text-gray-900 cursor-pointer">${provider.company_name || provider.name}</label>
+                                    ${verifiedBadge}
+                                    ${fastBadge}
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
                                     <span class="inline-flex items-center">
-                                        <i class="fas fa-star text-yellow-400 mr-1"></i>
-                                        ${provider.rating || 'N/A'}
+                                        <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i>
+                                        ${provider.pincodes}
                                     </span>
-                                    <span class="ml-2">${provider.availability || 'Contact for availability'}</span>
                                 </div>
                             </div>
                         </div>
@@ -393,11 +543,40 @@
             } catch (error) {
                 console.error('Error loading providers:', error);
                 container.innerHTML = '<div class="text-center py-4 text-red-600">Failed to load providers</div>';
+                document.getElementById('customProvider').disabled = true;
             }
+        }
+
+        function filterProvidersByPincode() {
+            const userPincode = document.getElementById('userPincode').value;
+            if (!userPincode) return;
+
+            const allProviders = document.querySelectorAll('#providersContainer > div');
+            allProviders.forEach(providerDiv => {
+                const pincodeText = providerDiv.querySelector('.text-gray-500').textContent;
+                const providerPincodes = pincodeText.replace(/.*: /, '').split(',').map(p => p.trim());
+                
+                if (providerPincodes.includes(userPincode)) {
+                    providerDiv.style.display = 'block';
+                } else {
+                    providerDiv.style.display = 'none';
+                }
+            });
         }
 
         async function confirmService(event) {
             event.preventDefault();
+
+            const userPincode = document.getElementById('userPincode').value;
+            const providerType = document.querySelector('input[name="providerType"]:checked').value;
+
+            // Check if providers are available in the pincode
+            const hasProviders = await checkProvidersInPincode(userPincode, selectedService);
+            
+            if (!hasProviders) {
+                showNoProvidersPopup();
+                return;
+            }
 
             // Generate unique service ID
             const baseId = 45864;
@@ -405,7 +584,6 @@
             generatedServiceId = baseId + randomSuffix;
 
             // Get selected providers if custom is chosen
-            const providerType = document.querySelector('input[name="providerType"]:checked').value;
             let selectedProviders = [];
             
             if (providerType === 'custom') {
@@ -418,16 +596,38 @@
                 }
             }
 
-            // Collect form data for Supabase
+            // Filter providers by pincode for default selection
+            let providerValue = 'default';
+            if (providerType === 'custom') {
+                providerValue = selectedProviders.join(',');
+            } else {
+                // For default, get providers in user's pincode
+                const { data: availableProviders } = await supabaseClient
+                    .from('providers')
+                    .select('email')
+                    .eq('status', 'active');
+                
+                if (availableProviders) {
+                    const pincodeProviders = availableProviders.filter(p => {
+                        const providerPincodes = p.pincodes?.split(',').map(pc => pc.trim()) || [];
+                        return providerPincodes.includes(userPincode);
+                    }).map(p => p.email);
+                    
+                    if (pincodeProviders.length > 0) {
+                        providerValue = pincodeProviders.join(',');
+                    }
+                }
+            }
+
             const serviceData = {
                 request_id: generatedServiceId,
                 phone: document.getElementById('userPhone').value,
-                pincode: document.getElementById('userPincode').value,
+                pincode: userPincode,
                 category: selectedService,
                 customer_name: document.getElementById('userName').value,
                 address: document.getElementById('userAddress').value,
                 notes: document.getElementById('extraNotes').value || null,
-                provider: providerType === 'custom' ? selectedProviders.join(',') : 'default',
+                provider: providerValue,
                 user_id: currentUser.user_id,
                 status: 'Pending'
             };
@@ -463,6 +663,12 @@
 
                 console.log('Service request submitted successfully:', data);
                 
+                // Send notifications to providers
+                await notifyProvidersOfNewRequest({
+                    ...serviceData,
+                    created_at: new Date().toISOString()
+                });
+                
                 // Show success modal
                 document.getElementById('serviceId').textContent = generatedServiceId;
                 document.getElementById('successModal').classList.remove('hidden');
@@ -476,6 +682,41 @@
         function trackService() {
             localStorage.setItem('trackingId', generatedServiceId);
             window.location.href = 'track_service.html';
+        }
+
+        async function checkProvidersInPincode(pincode, category) {
+            try {
+                const { data: providers, error } = await supabaseClient
+                    .from('providers')
+                    .select('pincodes, categories')
+                    .eq('status', 'active');
+
+                if (error) throw error;
+
+                if (!providers || providers.length === 0) {
+                    return false;
+                }
+
+                const availableProviders = providers.filter(provider => {
+                    const providerPincodes = provider.pincodes.split(',').map(p => p.trim());
+                    const providerCategories = provider.categories.split(',').map(c => c.trim());
+                    
+                    return providerPincodes.includes(pincode) && providerCategories.includes(category);
+                });
+
+                return availableProviders.length > 0;
+            } catch (error) {
+                console.error('Error checking providers:', error);
+                return false;
+            }
+        }
+
+        function showNoProvidersPopup() {
+            document.getElementById('noProvidersModal').classList.remove('hidden');
+        }
+
+        function closeNoProvidersModal() {
+            document.getElementById('noProvidersModal').classList.add('hidden');
         }
 
         function goHome() {
