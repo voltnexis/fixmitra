@@ -202,50 +202,42 @@
         }
 
         function getProviderServiceDisplay(provider) {
-            if (provider.selected_districts && provider.selection_type !== 'manual') {
-                const districts = provider.selected_districts.split(',').filter(d => d.trim());
-                if (districts.length > 0) {
-                    const displayText = districts.length <= 3 ? 
-                        districts.join(', ') : 
-                        `${districts.slice(0, 2).join(', ')} +${districts.length - 2} more districts`;
-                    
-                    if (provider.selection_type === 'combined') {
-                        const additionalCount = provider.additional_pincodes ? 
-                            provider.additional_pincodes.split(',').filter(p => p.trim()).length : 0;
-                        const excludedCount = provider.excluded_pincodes ? 
-                            provider.excluded_pincodes.split(',').filter(p => p.trim()).length : 0;
-                        
-                        let suffix = '';
-                        if (additionalCount > 0) suffix += ` +${additionalCount} extra`;
-                        if (excludedCount > 0) suffix += ` -${excludedCount} excluded`;
-                        
-                        return displayText + suffix;
-                    }
-                    
-                    return displayText;
-                }
-            }
+            if (!provider.pincodes) return 'No service areas';
             
-            const pincodeCount = provider.pincodes.split(',').filter(p => p.trim()).length;
-            return `${pincodeCount} service areas`;
+            const pincodes = provider.pincodes.split(',').map(p => p.trim()).filter(p => p);
+            
+            if (pincodes.length === 0) return 'No service areas';
+            
+            // Show first few pincodes, then count if more
+            if (pincodes.length <= 5) {
+                return pincodes.join(', ');
+            } else {
+                return `${pincodes.slice(0, 4).join(', ')} +${pincodes.length - 4} more`;
+            }
         }
         
         function filterProviders() {
             const categoryFilter = document.getElementById('categoryFilter').value;
-            const pincodeFilter = document.getElementById('pincodeFilter').value;
+            const pincodeFilter = document.getElementById('pincodeFilter').value.trim();
 
             let filteredProviders = allProviders;
 
             if (categoryFilter) {
                 filteredProviders = filteredProviders.filter(provider => 
-                    provider.categories.includes(categoryFilter)
+                    provider.categories && provider.categories.includes(categoryFilter)
                 );
             }
 
             if (pincodeFilter) {
                 filteredProviders = filteredProviders.filter(provider => {
+                    if (!provider.pincodes) return false;
                     const providerPincodes = provider.pincodes.split(',').map(p => p.trim());
-                    return providerPincodes.includes(pincodeFilter);
+                    // Check for partial match if less than 6 digits, exact match if 6 digits
+                    if (pincodeFilter.length < 6) {
+                        return providerPincodes.some(pincode => pincode.startsWith(pincodeFilter));
+                    } else {
+                        return providerPincodes.includes(pincodeFilter);
+                    }
                 });
             }
 
