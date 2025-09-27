@@ -504,17 +504,23 @@
 
                 if (error) throw error;
 
+                // Filter providers who offer the selected service
+                const serviceProviders = providers?.filter(provider => {
+                    const providerCategories = provider.categories.split(',').map(c => c.trim());
+                    return providerCategories.includes(selectedService);
+                }) || [];
+
                 container.innerHTML = '';
-                if (!providers?.length) {
-                    container.innerHTML = '<div class="text-center py-4 text-gray-500">No providers available</div>';
+                if (!serviceProviders.length) {
+                    container.innerHTML = '<div class="text-center py-4 text-gray-500">No providers available for this service</div>';
                     document.getElementById('customProvider').disabled = true;
                     return;
                 }
 
                 document.getElementById('customProvider').disabled = false;
-                allProvidersData = providers; // Store for filtering
+                allProvidersData = serviceProviders; // Store filtered providers
 
-                providers.forEach(provider => {
+                serviceProviders.forEach(provider => {
                     const providerDiv = document.createElement('div');
                     providerDiv.className = 'flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50';
                     
@@ -625,9 +631,12 @@
         function filterProvidersByPincode() {
             const userPincode = document.getElementById('userPincode').value;
             if (!userPincode || userPincode.length !== 6) {
-                // Show all providers if no valid pincode
+                // Show all service providers if no valid pincode
                 document.querySelectorAll('#providersContainer > div').forEach(div => {
                     div.style.display = 'block';
+                    // Remove availability indicator
+                    const indicator = div.querySelector('.availability-indicator');
+                    if (indicator) indicator.remove();
                 });
                 return;
             }
@@ -635,6 +644,7 @@
             const providerDivs = document.querySelectorAll('#providersContainer > div');
             providerDivs.forEach((providerDiv, index) => {
                 const provider = allProvidersData[index];
+                // Provider must offer the service AND serve the pincode
                 if (provider && validateProviderPincode(provider, userPincode)) {
                     providerDiv.style.display = 'block';
                     // Add availability indicator
@@ -647,6 +657,9 @@
                     }
                 } else {
                     providerDiv.style.display = 'none';
+                    // Remove availability indicator
+                    const indicator = providerDiv.querySelector('.availability-indicator');
+                    if (indicator) indicator.remove();
                 }
             });
         }
